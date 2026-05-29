@@ -1,0 +1,549 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>С Днём Рождения, Костя!</title>
+    <!-- Используем самую свежую и надёжную библиотеку canvas-confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/canvas-confetti.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ГЛОБАЛЬНЫЕ СТИЛИ С ПРИОРИТЕТОМ МОБИЛЬНОЙ ГИБКОСТИ */
+        body {
+            background-color: #fceaea;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #2e241f;
+            line-height: 1.45;
+            padding: 12px;
+            min-height: 100vh;
+        }
+
+        /* адаптивный контейнер — идеально резиновый */
+        .container {
+            max-width: 720px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(255, 248, 245, 0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 44px;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.03);
+            padding: 24px 20px;
+            transition: all 0.2s;
+        }
+
+        /* золотые акценты и типографика */
+        h1 {
+            font-size: clamp(2rem, 10vw, 3.8rem);
+            font-weight: 800;
+            text-align: center;
+            color: #c27e3a;
+            background: linear-gradient(135deg, #d4af37, #c27e3a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.3rem;
+            word-break: break-word;
+            padding: 0 4px;
+        }
+
+        .sub {
+            text-align: center;
+            font-size: clamp(0.85rem, 4vw, 1.1rem);
+            color: #b48152;
+            border-bottom: 1px solid #ffddcc;
+            display: inline-block;
+            width: auto;
+            margin: 0 auto 0.8rem;
+            padding-bottom: 6px;
+        }
+
+        .greeting-text {
+            font-size: clamp(0.95rem, 4.2vw, 1.18rem);
+            line-height: 1.55;
+            background: #fffaf7;
+            padding: 1.3rem;
+            border-radius: 32px;
+            margin: 1.5rem 0 1.2rem;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02);
+            border: 1px solid #ffe0d4;
+            color: #3a2c24;
+        }
+
+        .section-title {
+            font-size: clamp(1.4rem, 6vw, 1.8rem);
+            font-weight: 600;
+            margin: 1.8rem 0 1rem 0;
+            color: #b57342;
+            border-left: 5px solid #e5b87b;
+            padding-left: 16px;
+        }
+
+        /* карточки пожеланий — touch-friendly */
+        .wishes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 1.2rem;
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .wish-card {
+            background: white;
+            border-radius: 28px;
+            padding: 14px 18px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.03);
+            border: 1px solid #ffdecb;
+            transition: all 0.2s ease;
+            animation: fadeSlideUp 0.3s ease;
+        }
+
+        .wish-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+            border-color: #e9bc93;
+        }
+
+        .wish-name {
+            font-weight: 700;
+            color: #c4874b;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .wish-message {
+            font-size: 1rem;
+            line-height: 1.4;
+            color: #2e2a27;
+            word-break: break-word;
+        }
+
+        /* ИГРА СО СВЕЧОЙ — оптимизировано для тапов */
+        .game-area {
+            background: #ffece2;
+            border-radius: 48px;
+            padding: 20px 16px;
+            text-align: center;
+            margin: 20px 0 24px;
+            transition: 0.2s;
+        }
+
+        .candle-wrapper {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .candle-wrapper:active {
+            transform: scale(0.94);
+        }
+
+        .candle {
+            font-size: clamp(3.6rem, 14vw, 5.4rem);
+            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.1));
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .prediction {
+            font-size: clamp(0.95rem, 4.2vw, 1.12rem);
+            margin-top: 1rem;
+            font-style: italic;
+            background: #fff3ea;
+            padding: 14px 12px;
+            border-radius: 60px;
+            color: #b1551d;
+            font-weight: 500;
+            transition: 0.2s;
+            word-break: break-word;
+        }
+
+        /* БЛОК ВИДЕО — абсолютно адаптивный */
+        .video-card {
+            background: #fffaf5;
+            border-radius: 36px;
+            margin: 1.5rem 0 0.5rem;
+            padding: 16px 14px;
+            border: 1px solid #ffe0d4;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s;
+        }
+        .video-card:hover {
+            transform: translateY(-2px);
+            border-color: #e9bc93;
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #1a120c;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        .video-wrapper iframe {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9;
+            display: block;
+            border: none;
+        }
+        .video-caption {
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 12px;
+            color: #b48152;
+            letter-spacing: 0.3px;
+            font-weight: 500;
+        }
+
+        /* ФИНАЛЬНАЯ ЧАСТЬ + КНОПКА ПОДЕЛИТЬСЯ */
+        .footer-note {
+            text-align: center;
+            font-size: clamp(0.9rem, 4vw, 1rem);
+            margin-top: 2rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #ffdfcf;
+            color: #a7744b;
+        }
+        .share-btn {
+            background: #bda07a;
+            margin-top: 1rem;
+            display: inline-block;
+            padding: 12px 28px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 60px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            width: auto;
+            min-width: 200px;
+            max-width: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .share-btn:active {
+            transform: scale(0.96);
+            background: #c58f54;
+        }
+
+        /* анимации */
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 1; transform: scale(1);}
+            50% { opacity: 0.5; transform: scale(1.05); text-shadow: 0 0 5px orange;}
+            100% { opacity: 1; transform: scale(1);}
+        }
+        .blow-animation {
+            animation: flicker 0.2s ease-in-out 3;
+        }
+
+        /* ДОПОЛНИТЕЛЬНЫЕ МОБИЛЬНЫЕ ПРАВКИ: удобные касания, скролл */
+        @media (max-width: 560px) {
+            body {
+                padding: 8px;
+            }
+            .container {
+                padding: 20px 16px;
+                border-radius: 36px;
+            }
+            .greeting-text {
+                padding: 1.1rem;
+                border-radius: 28px;
+            }
+            .section-title {
+                margin: 1.2rem 0 0.9rem 0;
+            }
+            .wish-card {
+                padding: 12px 16px;
+            }
+            .game-area {
+                padding: 18px 12px;
+            }
+            .video-card {
+                padding: 12px 10px;
+            }
+            .share-btn {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+                min-width: 180px;
+            }
+        }
+
+        button, .candle-wrapper, .share-btn {
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- ГЛАВНОЕ ПОЗДРАВЛЕНИЕ С ИМЕНЕМ КОСТЯ -->
+    <h1>✨ С днём рождения, <span id="birthdayName">Костя</span>! ✨</h1>
+    <div style="display: flex; justify-content: center;"><span class="sub">🎂 нашему самому лучшему человеку 🎂</span></div>
+
+    <div class="greeting-text">
+        🌟 Дорогой <strong id="greetingName">Костя</strong>!<br><br>
+        В этот особенный день хочется сказать тебе то, что чувствуем каждый день. Ты — человек, который умеет согревать улыбкой, 
+        слушать сердцем и искренне радоваться успехам других. Спасибо за твою дружбу, за наши тёплые встречи, за честность и ту 
+        лёгкость, которую ты приносишь в жизнь. В новом году желаем тебе невероятных открытий, солнечного спокойствия внутри,
+        чтобы каждый рассвет начинался с вдохновения, а кофе был именно таким, как ты любишь. Пусть вокруг будет больше искренних
+        людей и мягких чудес. С тобой мир становится добрее — спасибо, что ты есть!
+    </div>
+
+    <!-- БЛОК ПОЖЕЛАНИЙ ОТ БЛИЗКИХ (ТРИ КАРТОЧКИ: СЕМЬЯ, МИША, КОЛЛЕГИ) -->
+    <div class="section-title">💬 Пожелания от близких</div>
+    <div id="wishesContainer" class="wishes-list">
+        <!-- 1. СЕМЬЯ: Твоя семья❤️ + текст "Regula Trei-N Nimic Nu Este Imposibil" -->
+        <div class="wish-card">
+            <div class="wish-name">💖 Твоя семья❤️</div>
+            <div class="wish-message">Regula Trei-N Nimic Nu Este Imposibil</div>
+        </div>
+        <!-- 2. ОТ МИШИ: с пожеланием "Оставайся таким же веселым! Будь всегда крутым😎 и сильным🦾" -->
+        <div class="wish-card">
+            <div class="wish-name">🎉 От Миши</div>
+            <div class="wish-message">Оставайся таким же веселым! Будь всегда крутым😎 и сильным🦾</div>
+        </div>
+        <!-- 3. КОЛЛЕГИ: возвращаем оригинальное душевное пожелание -->
+        <div class="wish-card">
+            <div class="wish-name">🍀 Коллеги</div>
+            <div class="wish-message">Спасибо за вдохновение и поддержку. Пусть успех сопутствует везде!</div>
+        </div>
+    </div>
+
+    <!-- МИНИ-ИГРА "ЗАГАДАЙ ЖЕЛАНИЕ" свеча -->
+    <div class="section-title">🕯️ Загадай желание</div>
+    <div class="game-area">
+        <div id="candleClickArea" class="candle-wrapper" title="Кликни по свече, чтобы загадать желание">
+            <div id="candleEmoji" class="candle">🕯️</div>
+        </div>
+        <div id="predictionBox" class="prediction">✨ Кликни на свечу — получи предсказание ✨</div>
+    </div>
+
+    <!-- ВИДЕО ПОЗДРАВЛЕНИЕ (адаптивный блок) -->
+    <div class="section-title">🎬 Видео поздравление</div>
+    <div class="video-card">
+        <div class="video-wrapper">
+            <!-- Официальный embed-код VK Video, корректно отображается на любых экранах -->
+            <iframe src="https://vkvideo.ru/video_ext.php?oid=-94172665&id=456240512&hd=2&autoplay=0"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+            </iframe>
+        </div>
+        <div class="video-caption">
+            📽️ Красивое видеопоздравление с тёплыми пожеланиями
+        </div>
+    </div>
+
+    <!-- финальная строка и кнопка поделиться -->
+    <div class="footer-note">
+        <div>🌸 Спасибо, что разделили этот день со мной! 🌸</div>
+        <button id="shareButton" class="share-btn">📲 Поделиться ссылкой</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // === ИМЯ ИМЕНИННИКА ===
+        const BIRTHDAY_PERSON = "Костя";
+        const nameSpan = document.getElementById("birthdayName");
+        const greetingNameSpan = document.getElementById("greetingName");
+        if (nameSpan) nameSpan.innerText = BIRTHDAY_PERSON;
+        if (greetingNameSpan) greetingNameSpan.innerText = BIRTHDAY_PERSON;
+        
+        // === ОБЯЗАТЕЛЬНЫЙ ЭФФЕКТ КОНФЕТТИ (ГАРАНТИРОВАННО ВИДИМ) ===
+        // Функция надёжного запуска конфетти с разными вариациями
+        function burstConfetti(intensity = "super") {
+            if (typeof canvasConfetti !== 'function') {
+                console.warn("canvasConfetti не загружен");
+                return;
+            }
+            if (intensity === "super") {
+                // Мощный праздничный салют при загрузке страницы
+                canvasConfetti({ particleCount: 220, spread: 100, origin: { y: 0.6 }, startVelocity: 18, colors: ['#ffd966', '#ffb347', '#f4a261', '#e9c46a', '#d4af37', '#c27e3a'] });
+                setTimeout(() => { canvasConfetti({ particleCount: 150, spread: 130, origin: { y: 0.5, x: 0.2 }, startVelocity: 20, colors: ['#e76f51', '#f4a261', '#e9c46a', '#ffb347'] }); }, 120);
+                setTimeout(() => { canvasConfetti({ particleCount: 150, spread: 130, origin: { y: 0.5, x: 0.8 }, startVelocity: 20, colors: ['#2a9d8f', '#e9c46a', '#f4a261', '#d4af37'] }); }, 130);
+                setTimeout(() => { canvasConfetti({ particleCount: 300, spread: 80, origin: { y: 0.4 }, startVelocity: 16, colors: ['#d4af37', '#c27e3a', '#ffb347', '#fff0b5'] }); }, 300);
+                setTimeout(() => { canvasConfetti({ particleCount: 100, spread: 70, origin: { y: 0.7 }, startVelocity: 12, colors: ['#ffbe76', '#f6ae7a', '#e69b5e'] }); }, 550);
+            } 
+            else if (intensity === "medium") {
+                // Средний залп для клика по свече
+                canvasConfetti({ particleCount: 110, spread: 75, origin: { y: 0.65 }, startVelocity: 14, colors: ['#ffcd94', '#e6b87e', '#d4af37', '#ffb347'] });
+                setTimeout(() => { canvasConfetti({ particleCount: 70, spread: 90, origin: { y: 0.55, x: 0.3 }, startVelocity: 12 }); }, 80);
+                setTimeout(() => { canvasConfetti({ particleCount: 70, spread: 90, origin: { y: 0.55, x: 0.7 }, startVelocity: 12 }); }, 90);
+            }
+            else {
+                // Лёгкий акцент
+                canvasConfetti({ particleCount: 50, spread: 55, origin: { y: 0.7 }, startVelocity: 10 });
+            }
+        }
+        
+        // ЗАПУСКАЕМ КОНФЕТТИ СРАЗУ ПОСЛЕ ЗАГРУЗКИ СТРАНИЦЫ (видимый фейерверк!)
+        window.addEventListener('load', function() {
+            // Небольшая задержка для полной отрисовки DOM, чтобы конфетти было в кадре
+            setTimeout(() => {
+                burstConfetti("super");
+            }, 200);
+            // Дополнительный веселый залп через 1.2 секунды для настроения
+            setTimeout(() => {
+                if (typeof canvasConfetti === 'function') {
+                    canvasConfetti({ particleCount: 180, spread: 110, origin: { y: 0.5 }, startVelocity: 15, decay: 0.9 });
+                }
+            }, 1200);
+        });
+        
+        // ========== ИГРА СО СВЕЧОЙ + конфетти при задувании ==========
+        const predictionsList = [
+            "🍀 Пусть кофе по утрам будет крепким, а дни — лёгкими!",
+            "🎉 Впереди — невероятное приключение, будь готов к сюрпризам!",
+            "🌟 Твоя доброта вернётся тебе тройным счастьем в этом году.",
+            "🍰 Желание, загаданное сегодня, исполнится через 11 дней. Проверим?",
+            "📖 Пусть новая глава твоей жизни будет самой захватывающей!",
+            "🌼 Неожиданный подарок уже едет к тебе... или это просто кот в коробке.",
+            "🎈 Жди письма счастья: оно придёт туда, куда ты его позовёшь.",
+            "✨ Все твои идеи — золотые, просто начни!"
+        ];
+        
+        const candleDiv = document.getElementById("candleEmoji");
+        const predictionBox = document.getElementById("predictionBox");
+        const candleArea = document.getElementById("candleClickArea");
+        
+        let isBlowingAnimation = false;
+        
+        function getRandomPrediction() {
+            return predictionsList[Math.floor(Math.random() * predictionsList.length)];
+        }
+        
+        function animateBlowAndPredict() {
+            if(isBlowingAnimation) return;
+            isBlowingAnimation = true;
+            if(candleDiv) candleDiv.classList.add("blow-animation");
+            
+            // ✨ ЗАПУСКАЕМ КОНФЕТТИ ПРИ КЛИКЕ НА СВЕЧУ (ПРАЗДНИЧНЫЙ ЭФФЕКТ) ✨
+            burstConfetti("medium");
+            
+            setTimeout(() => {
+                if(candleDiv) candleDiv.innerHTML = "🕯️💨";
+                const newPrediction = getRandomPrediction();
+                if(predictionBox) predictionBox.innerHTML = `🔮 ${newPrediction} 🔮`;
+                setTimeout(() => {
+                    if(candleDiv) {
+                        candleDiv.innerHTML = "🕯️";
+                        candleDiv.classList.remove("blow-animation");
+                    }
+                    isBlowingAnimation = false;
+                }, 1000);
+            }, 200);
+        }
+        
+        if(candleArea) {
+            // Обработчики и для мыши, и для тач-экранов
+            candleArea.addEventListener("click", (e) => {
+                e.stopPropagation();
+                animateBlowAndPredict();
+            });
+            candleArea.addEventListener("touchstart", (e) => {
+                e.preventDefault();
+                animateBlowAndPredict();
+            }, { passive: false });
+        }
+        
+        // ========== КНОПКА ПОДЕЛИТЬСЯ ==========
+        const shareBtn = document.getElementById("shareButton");
+        if(shareBtn) {
+            shareBtn.addEventListener("click", () => {
+                // приятный мини-салют при шеринге
+                if (typeof canvasConfetti === 'function') {
+                    canvasConfetti({ particleCount: 70, spread: 50, origin: { y: 0.8 }, colors: ['#d4af37', '#ffb347'] });
+                }
+                const url = window.location.href;
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Поздравление для ' + BIRTHDAY_PERSON,
+                        text: 'Загляни на страницу с поздравлением и тёплыми пожеланиями! 🎂',
+                        url: url,
+                    }).catch(err => {
+                        if(err.name !== 'AbortError') console.log('Ошибка шаринга', err);
+                    });
+                } else {
+                    navigator.clipboard.writeText(url).then(() => {
+                        alert("Ссылка скопирована! Можете поделиться с друзьями 🎉");
+                    }).catch(() => {
+                        alert("Не удалось скопировать ссылку, но вы можете скопировать вручную");
+                    });
+                }
+            });
+        }
+        
+        // фикс для видео (адаптивность)
+        const videoFrame = document.querySelector('.video-wrapper iframe');
+        if(videoFrame) {
+            videoFrame.setAttribute('width', '100%');
+            videoFrame.setAttribute('height', 'auto');
+        }
+        
+        function fixVideoAspect() {
+            const wrapper = document.querySelector('.video-wrapper');
+            if(wrapper && wrapper.clientWidth) {
+                const iframe = wrapper.querySelector('iframe');
+                if(iframe && !iframe.style.aspectRatio) {
+                    iframe.style.aspectRatio = '16 / 9';
+                }
+            }
+        }
+        window.addEventListener('resize', fixVideoAspect);
+        fixVideoAspect();
+        
+        // touch-фидбек для карточек (приятная мелочь)
+        const cards = document.querySelectorAll('.wish-card, .video-card');
+        cards.forEach(card => {
+            card.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.99)';
+                setTimeout(() => { this.style.transform = ''; }, 120);
+            });
+        });
+        
+        // Дополнительно: если пользователь кликает на заголовок, тоже летят искры радости
+        const titleHeader = document.querySelector('h1');
+        if(titleHeader) {
+            titleHeader.addEventListener('click', () => {
+                if (typeof canvasConfetti === 'function') {
+                    canvasConfetti({ particleCount: 40, spread: 45, origin: { y: 0.2 }, startVelocity: 8 });
+                }
+            });
+        }
+        
+        // ПРОВЕРКА: если по какой-то причине библиотека не загрузилась с CDN, выводим предупреждение, но ничего страшного.
+        if (typeof canvasConfetti !== 'function') {
+            console.warn("canvas-confetti не загрузилась, но сайт работает отлично, эффект не отображается.");
+        }
+    })();
+</script>
+</body>
+</html>
+```
